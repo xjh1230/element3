@@ -2,7 +2,8 @@ import { nextTick } from 'vue'
 import Loading from './loading.vue'
 import { addClass, removeClass, getStyle } from 'element-ui/src/utils/dom'
 import { PopupManager } from 'element-ui/src/utils/popup'
-import afterLeave from 'element-ui/src/utils/after-leave'
+// import afterLeave from 'element-ui/src/utils/after-leave'
+import afterLeave from './after-leave'
 const Mask = { extends: Loading }
 
 const loadingDirective = {}
@@ -101,7 +102,7 @@ loadingDirective.install = (app) => {
     }
   }
   app.directive('loading', {
-    bind: function (el, binding, vnode) {
+    beforeMount: function (el, binding, vnode) {
       const textExr = el.getAttribute('element-loading-text')
       const spinnerExr = el.getAttribute('element-loading-spinner')
       const backgroundExr = el.getAttribute('element-loading-background')
@@ -124,14 +125,14 @@ loadingDirective.install = (app) => {
       binding.value && toggleLoading(el, binding)
     },
 
-    update: function (el, binding) {
+    updated: function (el, binding) {
       el.instance.setText(el.getAttribute('element-loading-text'))
       if (binding.oldValue !== binding.value) {
         toggleLoading(el, binding)
       }
     },
 
-    unbind: function (el, binding) {
+    unmounted: function (el, binding) {
       if (el.domInserted) {
         el.mask && el.mask.parentNode && el.mask.parentNode.removeChild(el.mask)
         toggleLoading(el, { value: false, modifiers: binding.modifiers })

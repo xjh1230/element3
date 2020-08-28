@@ -18,24 +18,47 @@
 </template>
 
 <script>
+import { setup, reactive } from 'vue'
 export default {
-  data() {
-    return {
+  // data() {
+  //   return {
+  //     text: null,
+  //     spinner: null,
+  //     background: null,
+  //     fullscreen: true,
+  //     visible: false,
+  //     customClass: ''
+  //   }
+  // },
+
+  // methods: {
+  //   handleAfterLeave() {
+  //     this.$emit('after-leave')
+  //   },
+  //   setText(text) {
+  //     this.text = text
+  //   }
+  // },
+
+  setup(props, { emit }) {
+    const data = reactive({
       text: null,
       spinner: null,
       background: null,
       fullscreen: true,
       visible: false,
       customClass: ''
+    })
+    const handleAfterLeave = () => {
+      emit('after-leave')
     }
-  },
-
-  methods: {
-    handleAfterLeave() {
-      this.$emit('after-leave')
-    },
-    setText(text) {
-      this.text = text
+    const setText = (text) => {
+      data.text = text
+    }
+    return {
+      ...data,
+      handleAfterLeave,
+      setText
     }
   }
 }

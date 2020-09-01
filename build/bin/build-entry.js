@@ -101,7 +101,8 @@ ComponentNames.forEach((name) => {
       'rate',
       'divider',
       'progress',
-      'message'
+      'message',
+      'loading'
     ].indexOf(name) > -1
   ) {
     // 白名单 挨个替换
@@ -142,6 +143,6 @@ var template = render(MAIN_TEMPLATE, {
   version: process.env.VERSION || require('../../package.json').version,
   list: listTemplate.join(',' + endOfLine)
 })
-
+console.log('OUTPUT_PATH', OUTPUT_PATH)
 fs.writeFileSync(OUTPUT_PATH, template)
 console.log('[build entry] DONE:', OUTPUT_PATH)

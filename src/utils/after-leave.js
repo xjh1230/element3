@@ -21,6 +21,7 @@ export default function (instance, callback, speed = 300, once = false) {
   } else {
     instance.$on('after-leave', afterLeaveCallback)
   }
+
   setTimeout(() => {
     afterLeaveCallback()
   }, speed + 100)

@@ -2,11 +2,11 @@ import { nextTick, createApp } from 'vue'
 import Loading from './loading.vue'
 import { addClass, removeClass, getStyle } from 'element-ui/src/utils/dom'
 import { PopupManager } from 'element-ui/src/utils/popup'
-// import afterLeave from 'element-ui/src/utils/after-leave'
-const Mask = {
-  extends: Loading
-}
+import afterLeave from 'element-ui/src/utils/after-leave'
+
 const loadingDirective = {}
+let app
+let mountParent
 loadingDirective.install = (app) => {
   // if (Vue.prototype.$isServer) return
   const toggleLoading = (el, binding) => {
@@ -108,23 +108,35 @@ loadingDirective.install = (app) => {
       const backgroundExr = el.getAttribute('element-loading-background')
       const customClassExr = el.getAttribute('element-loading-custom-class')
       const vm = vnode.context
-      // const mask = new Mask({
-      //   el: document.createElement('div'),
-      //   data: {
-      //     text: (vm && vm[textExr]) || textExr,
-      //     spinner: (vm && vm[spinnerExr]) || spinnerExr,
-      //     background: (vm && vm[backgroundExr]) || backgroundExr,
-      //     customClass: (vm && vm[customClassExr]) || customClassExr,
-      //     fullscreen: !!binding.modifiers.fullscreen
-      //   }
-      // })
-      const mask = createApp(Mask, {
-        text: (vm && vm[textExr]) || textExr,
-        spinner: (vm && vm[spinnerExr]) || spinnerExr,
-        background: (vm && vm[backgroundExr]) || backgroundExr,
-        customClass: (vm && vm[customClassExr]) || customClassExr,
-        fullscreen: !!binding.modifiers.fullscreen
-      }).mount(document.createElement('div'))
+      const Mask = {
+        extends: Loading,
+        data() {
+          return {
+            text: (vm && vm[textExr]) || textExr,
+            spinner: (vm && vm[spinnerExr]) || spinnerExr,
+            background: (vm && vm[backgroundExr]) || backgroundExr,
+            customClass: (vm && vm[customClassExr]) || customClassExr,
+            fullscreen: !!binding.modifiers.fullscreen
+          }
+        }
+      }
+      mountParent = !!binding.modifiers.fullscreen
+        ? document.createElement('div')
+        : el
+      app = createApp(Mask, {
+        'onAfter-leave': function () {
+          const target =
+            el.instance.fullscreen || el.instance.body
+              ? document.body
+              : el.instance.target
+          removeClass(target, 'el-loading-parent--relative')
+          removeClass(target, 'el-loading-parent--hidden')
+
+          el.instance.visible = false
+          el.instance.hiding = true
+        }
+      })
+      const mask = app.mount(mountParent)
       el.instance = mask
       el.mask = mask.$el
       el.maskStyle = {}
@@ -144,7 +156,7 @@ loadingDirective.install = (app) => {
         el.mask && el.mask.parentNode && el.mask.parentNode.removeChild(el.mask)
         toggleLoading(el, { value: false, modifiers: binding.modifiers })
       }
-      el.instance && el.instance.$destroy()
+      el.instance && app.unmount(mountParent)
     }
   })
 }

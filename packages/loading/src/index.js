@@ -1,11 +1,15 @@
-import { nextTick } from 'vue'
+// import { nextTick, defineComponent, createApp, h, render } from 'vue'
+import { nextTick, defineComponent, createApp } from 'vue'
 import loadingVue from './loading.vue'
-import { addClass, removeClass, getStyle } from 'element-ui/src/utils/dom'
+// import { addClass, removeClass, getStyle } from 'element-ui/src/utils/dom'
+import { addClass, getStyle } from 'element-ui/src/utils/dom'
 import { PopupManager } from 'element-ui/src/utils/popup'
-import afterLeave from 'element-ui/src/utils/after-leave'
+// import afterLeave from 'element-ui/src/utils/after-leave'
 import merge from 'element-ui/src/utils/merge'
 
-const LoadingConstructor = { extends: loadingVue }
+// const LoadingConstructor = {
+//   extends: loadingVue
+// }
 
 const defaults = {
   text: null,
@@ -16,29 +20,6 @@ const defaults = {
 }
 
 let fullscreenLoading
-
-LoadingConstructor.prototype.originalPosition = ''
-LoadingConstructor.prototype.originalOverflow = ''
-
-LoadingConstructor.prototype.close = function () {
-  if (this.fullscreen) {
-    fullscreenLoading = undefined
-  }
-  afterLeave(
-    this,
-    (_) => {
-      const target = this.fullscreen || this.body ? document.body : this.target
-      removeClass(target, 'el-loading-parent--relative')
-      removeClass(target, 'el-loading-parent--hidden')
-      if (this.$el && this.$el.parentNode) {
-        this.$el.parentNode.removeChild(this.$el)
-      }
-      this.$destroy()
-    },
-    300
-  )
-  this.visible = false
-}
 
 const addStyle = (options, parent, instance) => {
   const maskStyle = {}
@@ -85,11 +66,42 @@ const Loading = (options = {}) => {
   }
 
   const parent = options.body ? document.body : options.target
-  const instance = new LoadingConstructor({
-    el: document.createElement('div'),
-    data: options
-  })
+  // const instance = new LoadingConstructor({
+  //   el: document.createElement('div'),
+  //   data: options
+  // })
 
+  const LoadingConstructor = defineComponent({
+    extends: defineComponent(loadingVue),
+    data() {
+      return options
+    },
+    methods: {
+      close: function () {
+        if (this.fullscreen) {
+          fullscreenLoading = undefined
+        }
+        // afterLeave(
+        //   this,
+        //   (_) => {
+        //     const target =
+        //       this.fullscreen || this.body ? document.body : this.target
+        //     removeClass(target, 'el-loading-parent--relative')
+        //     removeClass(target, 'el-loading-parent--hidden')
+        //     if (this.$el && this.$el.parentNode) {
+        //       this.$el.parentNode.removeChild(this.$el)
+        //     }
+        //     this.$destroy()
+        //   },
+        //   300
+        // )
+        this.visible = false
+      }
+    }
+  })
+  const instance = createApp(LoadingConstructor).mount(
+    document.createElement('div')
+  )
   addStyle(options, parent, instance)
   if (
     instance.originalPosition !== 'absolute' &&

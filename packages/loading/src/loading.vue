@@ -18,6 +18,7 @@
 </template>
 
 <script>
+// import { setup, reactive } from 'vue'
 export default {
   data() {
     return {
@@ -29,7 +30,6 @@ export default {
       customClass: ''
     }
   },
-
   methods: {
     handleAfterLeave() {
       this.$emit('after-leave')
@@ -38,5 +38,28 @@ export default {
       this.text = text
     }
   }
+  // setup(props, {
+  //     emit
+  // }) {
+  //     const data = reactive({
+  //         text: null,
+  //         spinner: null,
+  //         background: null,
+  //         fullscreen: true,
+  //         visible: false,
+  //         customClass: ''
+  //     })
+  //     const handleAfterLeave = () => {
+  //         emit('after-leave')
+  //     }
+  //     const setText = (text) => {
+  //         data.text = text
+  //     }
+  //     return {
+  //         ...data,
+  //         handleAfterLeave,
+  //         setText
+  //     }
+  // }
 }
 </script>

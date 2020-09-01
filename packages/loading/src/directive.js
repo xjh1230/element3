@@ -1,10 +1,11 @@
-import { nextTick } from 'vue'
+import { nextTick, createApp } from 'vue'
 import Loading from './loading.vue'
 import { addClass, removeClass, getStyle } from 'element-ui/src/utils/dom'
 import { PopupManager } from 'element-ui/src/utils/popup'
-import afterLeave from 'element-ui/src/utils/after-leave'
-const Mask = { extends: Loading }
-
+// import afterLeave from 'element-ui/src/utils/after-leave'
+const Mask = {
+  extends: Loading
+}
 const loadingDirective = {}
 loadingDirective.install = (app) => {
   // if (Vue.prototype.$isServer) return
@@ -45,22 +46,22 @@ loadingDirective.install = (app) => {
         }
       })
     } else {
-      afterLeave(
-        el.instance,
-        (_) => {
-          if (!el.instance.hiding) return
-          el.domVisible = false
-          const target =
-            binding.modifiers.fullscreen || binding.modifiers.body
-              ? document.body
-              : el
-          removeClass(target, 'el-loading-parent--relative')
-          removeClass(target, 'el-loading-parent--hidden')
-          el.instance.hiding = false
-        },
-        300,
-        true
-      )
+      // afterLeave(
+      //   el.instance,
+      //   (_) => {
+      //     if (!el.instance.hiding) return
+      //     el.domVisible = false
+      //     const target =
+      //       binding.modifiers.fullscreen || binding.modifiers.body
+      //         ? document.body
+      //         : el
+      //     removeClass(target, 'el-loading-parent--relative')
+      //     removeClass(target, 'el-loading-parent--hidden')
+      //     el.instance.hiding = false
+      //   },
+      //   300,
+      //   true
+      // )
       el.instance.visible = false
       el.instance.hiding = true
     }
@@ -101,22 +102,29 @@ loadingDirective.install = (app) => {
     }
   }
   app.directive('loading', {
-    bind: function (el, binding, vnode) {
+    beforeMount: function (el, binding, vnode) {
       const textExr = el.getAttribute('element-loading-text')
       const spinnerExr = el.getAttribute('element-loading-spinner')
       const backgroundExr = el.getAttribute('element-loading-background')
       const customClassExr = el.getAttribute('element-loading-custom-class')
       const vm = vnode.context
-      const mask = new Mask({
-        el: document.createElement('div'),
-        data: {
-          text: (vm && vm[textExr]) || textExr,
-          spinner: (vm && vm[spinnerExr]) || spinnerExr,
-          background: (vm && vm[backgroundExr]) || backgroundExr,
-          customClass: (vm && vm[customClassExr]) || customClassExr,
-          fullscreen: !!binding.modifiers.fullscreen
-        }
-      })
+      // const mask = new Mask({
+      //   el: document.createElement('div'),
+      //   data: {
+      //     text: (vm && vm[textExr]) || textExr,
+      //     spinner: (vm && vm[spinnerExr]) || spinnerExr,
+      //     background: (vm && vm[backgroundExr]) || backgroundExr,
+      //     customClass: (vm && vm[customClassExr]) || customClassExr,
+      //     fullscreen: !!binding.modifiers.fullscreen
+      //   }
+      // })
+      const mask = createApp(Mask, {
+        text: (vm && vm[textExr]) || textExr,
+        spinner: (vm && vm[spinnerExr]) || spinnerExr,
+        background: (vm && vm[backgroundExr]) || backgroundExr,
+        customClass: (vm && vm[customClassExr]) || customClassExr,
+        fullscreen: !!binding.modifiers.fullscreen
+      }).mount(document.createElement('div'))
       el.instance = mask
       el.mask = mask.$el
       el.maskStyle = {}
@@ -124,14 +132,14 @@ loadingDirective.install = (app) => {
       binding.value && toggleLoading(el, binding)
     },
 
-    update: function (el, binding) {
+    updated: function (el, binding) {
       el.instance.setText(el.getAttribute('element-loading-text'))
       if (binding.oldValue !== binding.value) {
         toggleLoading(el, binding)
       }
     },
 
-    unbind: function (el, binding) {
+    unmounted: function (el, binding) {
       if (el.domInserted) {
         el.mask && el.mask.parentNode && el.mask.parentNode.removeChild(el.mask)
         toggleLoading(el, { value: false, modifiers: binding.modifiers })

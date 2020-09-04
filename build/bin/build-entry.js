@@ -113,6 +113,8 @@ ComponentNames.forEach((name) => {
       'progress',
       'notification',
       'page-header',
+      'tabs',
+      'tab-pane',
       'message'
     ].indexOf(name) > -1
   ) {

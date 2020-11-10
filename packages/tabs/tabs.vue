@@ -7,6 +7,7 @@ import {
     readonly,
     onUpdated,
     onMounted,
+    onBeforeMount,
     onUnmounted,
     toRefs,
     ref,
@@ -14,9 +15,18 @@ import {
     nextTick,
     getCurrentInstance,
     createApp,
-    createVNode
+    createVNode,
+    h,
+    render, isVNode
 } from 'vue'
-
+import {
+  getComponent,
+  getOptionProps,
+  filterEmpty,
+  findDOMNode,
+  getPropsData,
+//   getSlot,
+} from 'element-ui/src/utils/props-utils'
 export default {
     name: 'ElTabs',
 
@@ -41,13 +51,14 @@ export default {
     
 
     setup(props, ctx) {
-        const _this = getCurrentInstance()
-        const navRef = ref(null)
+        const navRef = ref('')
         const state = reactive({
             currentName: props.value || props.activeName,
-            panes: []
+            panes: [],
+            paneSlots:[]
         })
-        provide('rootTabs', readonly(ctx))
+        const _this = getCurrentInstance()
+        provide('rootTabs', readonly(_this))
         watch(
             ()=>props.value,
             (newVal) => {
@@ -72,8 +83,17 @@ export default {
                 }
             }
         )
+        
+
         const calcPaneInstances = (isForceUpdate = false) => {
+        //    const _this=getCurrentInstance()
+        
+           console.log(_this)
             if (_this.slots.default) {
+                const comp = getComponent(_this.ctx);
+                // console.log(comp)
+                // var vnode = _this.slots.default()[0];
+                // console.log(isVNode(vnode),vnode)
                 const paneSlots = _this.slots.default().filter(
                     (vnode) =>
                     vnode.type &&
@@ -82,20 +102,29 @@ export default {
                 )
                 // update indeed
                 const panes = paneSlots.map(
-                    s => s
+                    s => {
+                        return s
+                    }
                 )
+                const tmp = panes.every((pane, index) =>{ 
+                    console.log(pane,index); 
+                    return pane == state.panes[index]}
+                )
+                console.log(tmp,'tmp')
                 const panesChanged = !(
-                    panes.length === state.panes.length &&
-                    panes.every((pane, index) => pane === state.panes[index])
-                )
-                if (isForceUpdate || panesChanged) {
+                    panes.length === state.panes.length &&tmp
+                    )
+                if (isForceUpdate || panesChanged) {//
+                    state.paneSlots=paneSlots
                     state.panes = panes
                 }
             } else if (state.panes.length !== 0) {
+                state.paneSlots = []
                 state.panes = []
             }
         }
         const handleTabClick = (tab, tabName, event) => {
+            console.log(123456);
             if (tab.disabled) return
             setCurrentName(tabName)
             ctx.emit('tab-click', tab, event)
@@ -132,18 +161,19 @@ export default {
             }
         }
         if (!state.currentName) {
-            setCurrentName('0')
+            setCurrentName('second')
         }
-        const onTabnavupdate = function () {
+        const onTabnavUpdate = function () {
             calcPaneInstances.bind(null, true)
         }
         onUpdated(() => {
-            calcPaneInstances()
+            // calcPaneInstances()
         })
         onMounted(() => {
             calcPaneInstances()
         })
-        calcPaneInstances()
+
+        // calcPaneInstances()
         return{
             ...toRefs(state),
             // calcPaneInstances,
@@ -151,7 +181,7 @@ export default {
             handleTabRemove,
             handleTabAdd,
             setCurrentName,
-            onTabnavupdate,
+            onTabnavUpdate,
             navRef
         }
     },
@@ -193,15 +223,16 @@ export default {
         },
         ref: 'nav'
       };
+      //<tab-nav { ...navData.props }></tab-nav>
       const header = (
         <div class={['el-tabs__header', `is-${tabPosition}`]}>
           {newButton}
-          <tab-nav { ...navData.props }></tab-nav>
+          <tab-nav { ...navData.props  }  ref="nav" ></tab-nav>
         </div>
       );
       const panels = (
         <div class="el-tabs__content">
-          {(this.$slots.default())}
+          {this.$slots.default()}
         </div>
       );
 

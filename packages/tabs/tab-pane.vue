@@ -29,28 +29,30 @@ export default {
     },
 
     setup(props, ctx) {
-         const _this = getCurrentInstance()
+        const _this = getCurrentInstance()
         const state = reactive({
             index: null,
             loaded: false
 
         })
         const isClosable = computed(() => {
-            return props.closable ||  _this.parent.closable
+            return props.closable || _this.parent.closable
         })
+
         const active = computed(() => {
-            const active =  _this.parent.currentName === (props.name || state.index)
-            if (active) {
+            
+            const active_ = _this.parent&&_this.parent.ctx.currentName === (props.name || state.index)
+            if (active_) {
                 // eslint-disable-next-line vue/no-side-effects-in-computed-properties
                 state.loaded = true
             }
-            return active
+            return active_
         })
         const paneName = computed(() => {
             return props.name || state.index
         })
         onUpdated(() => {
-             _this.parent.emit('tab-nav-update')
+            // _this.parent.emit('tab-nav-update')
         })
 
         return {

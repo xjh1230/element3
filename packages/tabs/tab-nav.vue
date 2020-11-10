@@ -13,10 +13,18 @@ import {
     onUnmounted,
     toRefs,
     renderList,
+    render,
     getCurrentInstance,
     createVNode
 } from 'vue'
-
+import {
+  getComponent,
+  getOptionProps,
+  filterEmpty,
+  findDOMNode,
+  getPropsData,
+//   getSlot,
+} from 'element-ui/src/utils/props-utils'
 function noop() {}
 const firstUpperCase = (str) => {
     return str.toLowerCase().replace(/( |^)[a-z]/g, (L) => L.toUpperCase())
@@ -54,16 +62,17 @@ export default {
             scrollable: false,
             navOffset: 0,
             isFocus: false,
-            focusable: true
+            focusable: true,
+            tabsNav:[]
         })
         const navStyle = computed(() => {
-            const dir = ['top', 'bottom'].indexOf(rootTabs.tabPosition) !== -1 ? 'X' : 'Y'
+            const dir = ['top', 'bottom'].indexOf(rootTabs.props.tabPosition) !== -1 ? 'X' : 'Y'
             return {
                 transform: `translate${dir}(-${state.navOffset}px)`
             }
         })
         const sizeName = computed(() => {
-            return ['top', 'bottom'].indexOf(rootTabs.tabPosition) !== -1
+            return ['top', 'bottom'].indexOf(rootTabs.props.tabPosition) !== -1? 'width' : 'height';
         })
         const scrollPrev = () => {
             const containerSize = ctx.$refs.navScroll[
@@ -98,7 +107,7 @@ export default {
             const activeTab = _this.el.querySelector('.is-active')
             if (!activeTab) return
             const navScroll = ctx.$refs.navScroll
-            const isHorizontal = ['top', 'bottom'].indexOf(rootTabs.tabPosition) !== -1
+            const isHorizontal = ['top', 'bottom'].indexOf(rootTabs.props.tabPosition) !== -1
             const activeTabBounding = activeTab.getBoundingClientRect()
             const navScrollBounding = navScroll.getBoundingClientRect()
             const maxOffset = isHorizontal ?
@@ -131,10 +140,11 @@ export default {
             state.navOffset = Math.min(newOffset, maxOffset)
         }
         const update = () => {
-            if (!ctx.$refs.nav) return
-            const sizeName = sizeName
-            const navSize = ctx.$refs.nav[`offset${firstUpperCase(sizeName)}`]
-            const containerSize = ctx.$refs.navScroll[
+             const _this = getCurrentInstance()
+            if (!_this.refs.nav) return
+            const sizeName = _this.ctx.sizeName
+            const navSize = _this.refs.nav[`offset${firstUpperCase(sizeName)}`]
+            const containerSize = _this.refs.navScroll[
                 `offset${firstUpperCase(sizeName)}`
             ]
             const currentOffset = state.navOffset
@@ -219,6 +229,7 @@ export default {
             update()
         })
         onMounted(() => {
+          console.log(state.tabsNav,12324463443543543)
             // addResizeListener(_this.el, update)
             document.addEventListener('visibilitychange', visibilityChangeHandler)
             window.addEventListener('blur', windowBlurHandler)
@@ -255,7 +266,7 @@ export default {
             rootTabs
         }
     },
-render(h) {
+render() {
     const {
       type,
       panes,
@@ -270,8 +281,11 @@ render(h) {
       changeTab,
       setFocus,
       removeFocus,
-      rootTabs
+      rootTabs,
+      isFocus,
+      tabsNav
     } = this
+    
     const _this = getCurrentInstance()
     const scrollBtn = scrollable
       ? [
@@ -291,7 +305,9 @@ render(h) {
       : null
 
     const tabs = renderList(panes, (pane, index) => {
-      const node = createVNode(pane)
+      const props = getPropsData(pane)
+      // const props1 = getOptionProps(pane)
+      // console.log(props,props1,_this)
       const tabName = pane.props.name || pane.props.index || index
       const closable = pane.isClosable || editable
 
@@ -307,36 +323,40 @@ render(h) {
       ) : null
 
       const tabLabelContent =   pane.props.label
-      const tabindex = pane.active ? 0 : -1
+      const isActive= _this.parent.ctx.currentName==(tabName||index)
+      const tabindex =isActive? 0 : -1
       return (
         <div
           class={{
             'el-tabs__item': true,
-            [`is-${rootTabs.tabPosition}`]: true,
-            'is-active': pane.active,
-            'is-disabled': pane.disabled,
+            [`is-${rootTabs.props.tabPosition}`]: true,
+            'is-active': isActive,
+            'is-disabled': props.disabled,
             'is-closable': closable,
-            'is-focus': state.isFocus
+            'is-focus': isFocus
           }}
           id={`tab-${tabName}`}
           key={`tab-${tabName}`}
           aria-controls={`pane-${tabName}`}
           role="tab"
-          aria-selected={pane.active}
-          ref="tabs"
+          aria-selected={isActive}
+          // ref="tabs"
+          ref={el => { tabsNav.push(el)  }}
           tabindex={tabindex}
           refInFor
-          on-focus={() => {
+          onFocus={() => {
+            console.log('focus')
             setFocus()
           }}
-          on-blur={() => {
+          onBlur={() => {
+            console.log('blur')
             removeFocus()
           }}
-          on-click={(ev) => {
+          onClick={(ev) => {
             removeFocus()
             onTabClick(pane, tabName, ev)
           }}
-          on-keydown={(ev) => {
+          onKeydown={(ev) => {
             if (closable && (ev.keyCode === 46 || ev.keyCode === 8)) {
               onTabRemove(pane, ev)
             }
@@ -347,22 +367,24 @@ render(h) {
         </div>
       )
     })
+ 
+    const renderTabBar=() => !type&&panes.length>0 ? <tab-bar ref="sad"  tabs={panes} ></tab-bar> : null
     return (
       <div
         class={[
           'el-tabs__nav-wrap',
           scrollable ? 'is-scrollable' : '',
-          `is-${rootTabs.tabPosition}`
+          `is-${rootTabs.props.tabPosition}`
         ]}
       >
-        {scrollBtn}
+      {scrollBtn}
         <div class={['el-tabs__nav-scroll']} ref="navScroll">
           <div
             class={[
               'el-tabs__nav',
-              `is-${rootTabs.tabPosition}`,
+              `is-${rootTabs.props.tabPosition}`,
               stretch &&
-              ['top', 'bottom'].indexOf(rootTabs.tabPosition) !== -1
+              ['top', 'bottom'].indexOf(rootTabs.props.tabPosition) !== -1
                 ? 'is-stretch'
                 : ''
             ]}
@@ -371,8 +393,8 @@ render(h) {
             role="tablist"
             on-keydown={changeTab}
           >
-            {!type ? <tab-bar tabs={panes}></tab-bar> : null}
-            {tabs}
+           {renderTabBar()}
+           {tabs}
           </div>
         </div>
       </div>
